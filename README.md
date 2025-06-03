@@ -19,7 +19,7 @@ Before running any scripts, install all required R packages by executing the fol
 
 ```r
 source("scripts/00_install_packages.R")
-
+```
 
 ## 📁 Project Structure
 ```plaintext
