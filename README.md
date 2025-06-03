@@ -6,14 +6,12 @@ This project uses gene expression data from the CuMiDa database (GSE50161) to bu
 
 Due to GitHub’s file size limits, the dataset is not included in this repository.
 
-👉 [Download Brain_GSE50161.csv from Google Drive](https://drive.google.com/file/d/1KnFSKkoN5F-YM_2PbAxTVDG3Sg2Zdhtf/view?usp=sharing)
+## 🔗 Dataset Source
+- [Kaggle Link](https://www.kaggle.com/datasets/brunogrisci/brain-cancer-gene-expression-cumida)
 
 **After downloading:**
 - Create a folder named `data/` in the project root (if it doesn't already exist).
 - Move the downloaded `Brain_GSE50161.csv` into the `data/` directory.
-
-## 🔗 Dataset Source
-- [Kaggle Link](https://www.kaggle.com/datasets/brunogrisci/brain-cancer-gene-expression-cumida)
 
 ## 📦 Setup Instructions
 
