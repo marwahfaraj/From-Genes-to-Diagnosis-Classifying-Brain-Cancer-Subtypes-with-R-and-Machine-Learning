@@ -1,0 +1,32 @@
+# Core data manipulation and visualization
+tidyverse          # Includes dplyr, ggplot2, readr, tidyr, etc.
+data.table         # Fast data manipulation
+janitor            # Cleaning column names, quick tabulations
+
+# Preprocessing and dimensionality reduction
+caret              # Machine learning workflow, preprocessing
+recipes            # Data preprocessing pipeline
+e1071              # SVM (used by caret), Naive Bayes
+glmnet             # LASSO and Ridge Regression
+Rtsne              # t-SNE for visualization
+FactoMineR         # PCA and other multivariate analysis
+factoextra         # PCA plotting
+
+# Modeling
+randomForest       # Random Forest model
+xgboost            # Gradient boosting trees
+nnet               # Neural networks (optional)
+
+# Evaluation
+pROC               # ROC curves and AUC
+MLmetrics          # Accuracy, precision, recall, F1-score
+yardstick          # Tidy model metrics (works with tidymodels)
+
+# Visualization
+ggpubr             # Publication-ready plots
+cowplot            # Combine ggplots
+gridExtra          # Arrange multiple plots
+
+# Report and Reproducibility
+rmarkdown          # Dynamic documents
+knitr              # Report rendering
