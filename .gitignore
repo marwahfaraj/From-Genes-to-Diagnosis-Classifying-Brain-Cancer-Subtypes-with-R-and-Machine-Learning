@@ -49,3 +49,5 @@ po/*~
 rsconnect/
 # Aviod large size file
 data/*
+
+.DS_Store
