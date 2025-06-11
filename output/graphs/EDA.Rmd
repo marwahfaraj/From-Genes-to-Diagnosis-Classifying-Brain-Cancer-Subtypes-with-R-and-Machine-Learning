@@ -1,0 +1,154 @@
+---
+title: "Brain Cancer Data Cleaning"
+output: html_document
+date: "2025-06-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(dplyr)
+library(pheatmap)
+library(tidyr)
+library(ggplot2)
+library(corrplot)
+library(reshape2)
+```
+
+```{r}
+list.files("data")
+data <- read_csv("data/Brain_GSE50161.csv")
+```
+
+```{r}
+# Count total missing values
+sum(is.na(data))
+
+# Columns with any NAs
+colSums(is.na(data)) %>% .[. > 0]
+```
+
+```{r}
+# Remove columns with no variance
+data_clean <- data[, sapply(data, function(x) length(unique(x)) > 1)]
+
+ncol(data)     # original
+ncol(data_clean)  # after removing constant columns
+```
+
+```{r}
+# Number of rows and columns
+dim(data_clean)
+
+# sample names
+head(data_clean$samples)
+
+# Summary of numeric values 
+summary(data_clean[, -1])  # Skip the samples column
+```
+
+## Variance Across Genes
+
+```{r}
+# Compute variance for each gene
+gene_variance <- apply(data_clean[, -1], 2, var)
+
+# Top 20 most variable genes
+sort(gene_variance, decreasing = TRUE)[1:20]
+
+# Plot distribution of variances
+hist(gene_variance, main = "Distribution of Gene Variances", xlab = "Variance")
+```
+
+## Top 5 Genes
+
+```{r}
+top5_genes <- names(sort(gene_variance, decreasing = TRUE))[1:5]
+
+plot_data <- data_clean %>%
+  select(samples, all_of(top5_genes)) %>%
+  pivot_longer(-samples, names_to = "gene", values_to = "expression")
+
+ggplot(plot_data, aes(x = gene, y = expression)) +
+  geom_boxplot(fill = "skyblue") +
+  labs(title = "Expression Distribution of Top 5 Variable Genes") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+## Correlation Between Genes
+
+```{r}
+# Correlation matrix for top 10 variable genes
+top_10_genes <- names(sort(gene_variance, decreasing = TRUE))[1:10]
+cor_matrix <- cor(data_clean[, top_10_genes])
+
+# Vis
+corrplot::corrplot(cor_matrix, method = "color", tl.cex = 0.8)
+```
+
+## Top Variable Genes
+
+```{r}
+# Top 10 most variable genes and variance
+top10_genes <- sort(gene_variance, decreasing = TRUE)[1:10]
+top10_df <- data.frame(
+  Gene = names(top10_genes),
+  Variance = top10_genes
+)
+
+# Bar plot
+library(ggplot2)
+
+ggplot(top10_df, aes(x = reorder(Gene, -Variance), y = Variance)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Top 10 Most Variable Genes",
+       x = "Gene",
+       y = "Variance") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r}
+top_genes <- names(sort(gene_variance, decreasing = TRUE))[1:25]
+heatmap_data <- as.matrix(data_clean[, top_genes])
+rownames(heatmap_data) <- data_clean$samples
+
+pheatmap(
+  mat = heatmap_data,
+  scale = "row",
+  show_rownames = FALSE,
+  show_colnames = TRUE,
+  fontsize_col = 5,
+  color = colorRampPalette(c("navy", "white", "firebrick3"))(100),
+  main = "Heatmap of Top 25 Most Variable Genes",
+  cluster_rows = TRUE,
+  cluster_cols = FALSE,
+  border_color = NA
+)
+
+```
+
+## Sample Level Summary
+
+```{r}
+# Confirm the numeric subset
+numeric_data <- data_clean[, sapply(data_clean, is.numeric)]
+
+# Get row sums
+sample_totals <- rowSums(numeric_data)
+
+# Boxplot and density
+boxplot(sample_totals, main = "Total Expression per Sample", ylab = "Sum of Expression")
+plot(density(sample_totals), main = "Density of Total Expression per Sample")
+```
+
+## Feature Selection Insight
+
+```{r}
+var_sorted <- sort(gene_variance, decreasing = TRUE)
+plot(cumsum(var_sorted) / sum(var_sorted), type = "l",
+     main = "Cumulative Variance Explained by Top Genes",
+     xlab = "Top N Genes", ylab = "Cumulative Proportion of Variance")
+```
