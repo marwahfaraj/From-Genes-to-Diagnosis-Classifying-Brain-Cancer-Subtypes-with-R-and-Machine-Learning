@@ -1,32 +1,41 @@
-# Core data manipulation and visualization
-tidyverse          # Includes dplyr, ggplot2, readr, tidyr, etc.
-data.table         # Fast data manipulation
-janitor            # Cleaning column names, quick tabulations
+# Core Data Manipulation and Visualization
+tidyverse       # dplyr, ggplot2, readr, tidyr, etc.
+data.table      # High-performance data manipulation
+janitor         # Clean column names, tabulations
 
-# Preprocessing and dimensionality reduction
-caret              # Machine learning workflow, preprocessing
-recipes            # Data preprocessing pipeline
-e1071              # SVM (used by caret), Naive Bayes
-glmnet             # LASSO and Ridge Regression
-Rtsne              # t-SNE for visualization
-FactoMineR         # PCA and other multivariate analysis
-factoextra         # PCA plotting
+# Preprocessing and Dimensionality Reduction
+caret           # ML workflows and preprocessing
+recipes         # Tidy preprocessing pipeline
+e1071           # SVM, Naive Bayes (used by caret)
+glmnet          # LASSO and Ridge Regression
+Rtsne           # t-SNE for nonlinear dimensionality reduction
+FactoMineR      # PCA and multivariate analysis
+factoextra      # Elegant PCA visualization
 
 # Modeling
-randomForest       # Random Forest model
-xgboost            # Gradient boosting trees
-nnet               # Neural networks (optional)
+randomForest    # Random Forests
+xgboost         # Extreme Gradient Boosting
+nnet            # Neural Networks (optional)
 
 # Evaluation
-pROC               # ROC curves and AUC
-MLmetrics          # Accuracy, precision, recall, F1-score
-yardstick          # Tidy model metrics (works with tidymodels)
+pROC            # ROC curves, AUC
+MLmetrics       # Accuracy, Precision, Recall, F1
+yardstick       # Metrics for tidymodels
 
 # Visualization
-ggpubr             # Publication-ready plots
-cowplot            # Combine ggplots
-gridExtra          # Arrange multiple plots
+ggpubr          # Publication-ready ggplot extensions
+cowplot         # Combine multiple ggplots
+gridExtra       # Arrange plots in a grid
 
-# Report and Reproducibility
-rmarkdown          # Dynamic documents
-knitr              # Report rendering
+# Reporting and Reproducibility
+rmarkdown       # Dynamic reports
+knitr           # Report rendering
+
+# Data Download & API
+httr            # HTTP requests (e.g., for Kaggle API)
+zip             # Unzipping downloaded archives
+jsonlite        # JSON file parsing (e.g., kaggle.json)
+
+# Heatmap
+pheatmap
+
