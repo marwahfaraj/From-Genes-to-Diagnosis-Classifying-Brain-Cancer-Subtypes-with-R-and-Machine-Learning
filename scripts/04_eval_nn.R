@@ -3,150 +3,95 @@
 suppressPackageStartupMessages({
   library(caret)
   library(dplyr)
-  library(ggplot2)
   library(nnet)
   library(smotefamily)
 })
 
 # ------------------------------------------------------------
-# Create directories for outputs if they don't exist
+# Create output directory
 # ------------------------------------------------------------
-if (!dir.exists("output/model/metrics")) dir.create("output/model/metrics", recursive = TRUE)
-if (!dir.exists("output/model/graphs"))  dir.create("output/model/graphs",  recursive = TRUE)
-
-# ------------------------------------------------------------
-# Define base colors matching the project theme
-# ------------------------------------------------------------
-base_colors <- c("#54B3AE", "#2C3A4B", "#A5D5D1", "#e8eadF", "#7FB6B0")
-
-# ------------------------------------------------------------
-# Load labels and identify DR files
-# ------------------------------------------------------------
-full_df   <- read.csv("output/cleaned_data.csv", stringsAsFactors = FALSE)
-class_col <- if ("Class" %in% names(full_df)) "Class" else "type"
-
-dr_dir   <- "output/dim_reduction"
-dr_files <- list.files(dr_dir,
-                       pattern    = "pca_scores\\.csv$|tsne_coordinates\\.csv$",
-                       full.names = TRUE)
-
-# ------------------------------------------------------------
-# Container for summaries
-# ------------------------------------------------------------
-results_list <- list()
-
-# ------------------------------------------------------------
-# Loop over each DR method
-# ------------------------------------------------------------
-for (dr_path in dr_files) {
-  method <- if (grepl("pca_scores", dr_path)) "pca" else "tsne"
-  dr_df  <- read.csv(dr_path, stringsAsFactors = FALSE)
-  dr_df$Class <- as.factor(full_df[[class_col]])
-  
-  # compute class weights
-  weights <- max(table(dr_df$Class)) / table(dr_df$Class)
-  
-  # ------------------------------------------------------------
-  # Weighted Neural Net
-  # ------------------------------------------------------------
-  ctrl_wt <- trainControl(
-    method  = "repeatedcv",
-    number  = 5,
-    repeats = 3
-  )
-  fit_wt <- train(
-    Class ~ .,
-    data       = dr_df,
-    method     = "nnet",
-    trControl  = ctrl_wt,
-    tuneLength = 3,
-    preProcess = c("nzv", "center", "scale"),
-    weights    = weights[dr_df$Class],
-    trace      = FALSE
-  )
-  acc_wt <- mean(fit_wt$resample$Accuracy)
-  sd_wt  <- sd(fit_wt$resample$Accuracy)
-  
-  # ------------------------------------------------------------
-  # SMOTE Neural Net
-  # ------------------------------------------------------------
-  ctrl_sm <- trainControl(
-    method   = "repeatedcv",
-    number   = 5,
-    repeats  = 3,
-    sampling = "smote"
-  )
-  fit_sm <- train(
-    Class ~ .,
-    data       = dr_df,
-    method     = "nnet",
-    trControl  = ctrl_sm,
-    tuneLength = 3,
-    preProcess = c("nzv", "center", "scale"),
-    trace      = FALSE
-  )
-  acc_sm <- mean(fit_sm$resample$Accuracy)
-  sd_sm  <- sd(fit_sm$resample$Accuracy)
-  
-  # ------------------------------------------------------------
-  # Build and save summary
-  # ------------------------------------------------------------
-  summary_df <- tibble(
-    Method   = method,
-    Strategy = c("Weighted", "SMOTE"),
-    MeanAcc  = c(acc_wt, acc_sm),
-    SDAcc    = c(sd_wt, sd_sm)
-  )
-  
-  write.csv(summary_df,
-            file      = paste0("output/model/metrics/summary_nn_", method, ".csv"),
-            row.names = FALSE)
-  
-  # ------------------------------------------------------------
-  # Plot and save
-  # ------------------------------------------------------------
-  p <- ggplot(summary_df, aes(x = Strategy, y = MeanAcc, fill = Strategy)) +
-    geom_col(width = 0.6) +
-    geom_errorbar(aes(ymin = MeanAcc - SDAcc, ymax = MeanAcc + SDAcc),
-                  width = 0.2) +
-    scale_fill_manual(values = base_colors) +
-    labs(title = paste("Neural Net Accuracy (", toupper(method), ")", sep = ""),
-         x     = "Strategy",
-         y     = "Mean Accuracy") +
-    theme_minimal()
-  
-  ggsave(filename = paste0("output/model/graphs/nn_accuracy_", method, ".png"),
-         plot     = p,
-         dpi      = 300,
-         width    = 8,
-         height   = 5)
-  
-  results_list[[method]] <- summary_df
+if (!dir.exists("output/model/metrics")) {
+  dir.create("output/model/metrics", recursive = TRUE)
 }
 
 # ------------------------------------------------------------
-# Compare across DR methods
+# Load PCA-transformed data
 # ------------------------------------------------------------
-combined <- bind_rows(results_list)
-write.csv(combined,
-          file      = "output/model/metrics/summary_nn_all_methods.csv",
-          row.names = FALSE)
+df <- read.csv("output/dim_reduction/pca_scores.csv", stringsAsFactors = FALSE)
+class_col <- if ("Class" %in% names(df)) "Class" else "type"
+df[[class_col]] <- as.factor(df[[class_col]])
 
-p_all <- ggplot(combined, aes(x = Method, y = MeanAcc, fill = Method)) +
-  geom_col(width = 0.6) +
-  geom_errorbar(aes(ymin = MeanAcc - SDAcc, ymax = MeanAcc + SDAcc),
-                width = 0.2) +
-  scale_fill_manual(values = base_colors) +
-  labs(title = "Neural Net Accuracy Comparison Across DR Methods",
-       x     = "DR Method",
-       y     = "Mean Accuracy") +
-  theme_minimal()
+# ------------------------------------------------------------
+# Weighted Neural Net
+# ------------------------------------------------------------
+cat("Running weighted neural net on PCA data...\n")
 
-ggsave(filename = "output/model/graphs/nn_accuracy_comparison.png",
-       plot     = p_all,
-       dpi      = 300,
-       width    = 8,
-       height   = 5)
+weights_vec <- max(table(df[[class_col]])) / table(df[[class_col]])
+sample_weights <- weights_vec[df[[class_col]]]
 
-cat("Neural Net evaluation complete for PCA and t-SNE.\n",
-    "Metrics in output/model/metrics/, graphs in output/model/graphs/.\n")
+ctrl_wt <- trainControl(
+  method = "repeatedcv",
+  number = 5,
+  repeats = 3,
+  classProbs = TRUE,
+  summaryFunction = defaultSummary
+)
+
+fit_wt <- train(
+  form = as.formula(paste(class_col, "~ .")),
+  data = df,
+  method = "nnet",
+  trControl = ctrl_wt,
+  tuneLength = 3,
+  preProcess = c("nzv", "center", "scale"),
+  weights = sample_weights,
+  trace = FALSE
+)
+
+acc_wt <- mean(fit_wt$resample$Accuracy)
+sd_wt  <- sd(fit_wt$resample$Accuracy)
+
+# ------------------------------------------------------------
+# SMOTE Neural Net
+# ------------------------------------------------------------
+cat("Running SMOTE neural net on PCA data...\n")
+
+ctrl_sm <- trainControl(
+  method = "repeatedcv",
+  number = 5,
+  repeats = 3,
+  sampling = "smote",
+  classProbs = TRUE,
+  summaryFunction = defaultSummary
+)
+
+fit_sm <- train(
+  form = as.formula(paste(class_col, "~ .")),
+  data = df,
+  method = "nnet",
+  trControl = ctrl_sm,
+  tuneLength = 3,
+  preProcess = c("nzv", "center", "scale"),
+  trace = FALSE
+)
+
+acc_sm <- mean(fit_sm$resample$Accuracy)
+sd_sm  <- sd(fit_sm$resample$Accuracy)
+
+# ------------------------------------------------------------
+# Save metrics
+# ------------------------------------------------------------
+summary_df <- tibble(
+  Method   = "pca",
+  Strategy = c("Weighted", "SMOTE"),
+  MeanAcc  = c(acc_wt, acc_sm),
+  SDAcc    = c(sd_wt, sd_sm)
+)
+
+write.csv(
+  summary_df,
+  file = "output/model/metrics/summary_nn_pca.csv",
+  row.names = FALSE
+)
+
+cat("Saved NN performance metrics with PCA using Weighted + SMOTE.\n")

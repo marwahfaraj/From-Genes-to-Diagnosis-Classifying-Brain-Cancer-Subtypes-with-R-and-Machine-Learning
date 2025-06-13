@@ -1,0 +1,6 @@
+Fold,Model,Accuracy,MacroF1,MacroAUC
+1,xgbTree,1,1,1
+2,xgbTree,0.9615384615384616,0.9466666666666667,1
+3,xgbTree,0.9642857142857143,0.9682539682539683,1
+4,xgbTree,1,1,1
+5,xgbTree,1,1,1
