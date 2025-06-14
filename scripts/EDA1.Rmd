@@ -151,4 +151,9 @@ var_sorted <- sort(gene_variance, decreasing = TRUE)
 plot(cumsum(var_sorted) / sum(var_sorted), type = "l",
      main = "Cumulative Variance Explained by Top Genes",
      xlab = "Top N Genes", ylab = "Cumulative Proportion of Variance")
+
+```
+
+```{r}
+
 ```
