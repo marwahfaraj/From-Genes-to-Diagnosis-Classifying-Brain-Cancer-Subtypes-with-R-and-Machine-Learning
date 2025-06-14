@@ -1,41 +1,110 @@
+# scripts/00_install_packages.R
+
+# Utility: install missing packages only
+install_if_missing <- function(packages) {
+  for (pkg in packages) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      message(paste("Installing", pkg, "..."))
+      install.packages(pkg)
+    }
+  }
+}
+
+# ----------------------------
 # Core Data Manipulation and Visualization
-tidyverse       # dplyr, ggplot2, readr, tidyr, etc.
-data.table      # High-performance data manipulation
-janitor         # Clean column names, tabulations
+# ----------------------------
+core_packages <- c(
+  "tidyverse",    # Includes dplyr, ggplot2, readr, tidyr, etc.
+  "data.table",   # Fast data manipulation
+  "janitor"       # Clean column names, tabulations
+)
 
+# ----------------------------
 # Preprocessing and Dimensionality Reduction
-caret           # ML workflows and preprocessing
-recipes         # Tidy preprocessing pipeline
-e1071           # SVM, Naive Bayes (used by caret)
-glmnet          # LASSO and Ridge Regression
-Rtsne           # t-SNE for nonlinear dimensionality reduction
-FactoMineR      # PCA and multivariate analysis
-factoextra      # Elegant PCA visualization
+# ----------------------------
+prep_packages <- c(
+  "caret",        # ML workflows
+  "recipes",      # Tidy preprocessing pipeline
+  "e1071",        # SVM, Naive Bayes (used by caret)
+  "glmnet",       # Lasso and Ridge Regression
+  "Rtsne",        # t-SNE
+  "FactoMineR",   # PCA & multivariate analysis
+  "factoextra"    # Elegant PCA visualizations
+)
 
+# ----------------------------
 # Modeling
-randomForest    # Random Forests
-xgboost         # Extreme Gradient Boosting
-nnet            # Neural Networks (optional)
+# ----------------------------
+modeling_packages <- c(
+  "randomForest",
+  "xgboost",
+  "nnet"          # Neural networks (optional)
+)
 
+# ----------------------------
 # Evaluation
-pROC            # ROC curves, AUC
-MLmetrics       # Accuracy, Precision, Recall, F1
-yardstick       # Metrics for tidymodels
+# ----------------------------
+evaluation_packages <- c(
+  "pROC",         # ROC curves, AUC
+  "MLmetrics",    # Accuracy, precision, recall
+  "yardstick"     # Metrics for tidymodels
+)
 
+# ----------------------------
 # Visualization
-ggpubr          # Publication-ready ggplot extensions
-cowplot         # Combine multiple ggplots
-gridExtra       # Arrange plots in a grid
+# ----------------------------
+viz_packages <- c(
+  "ggpubr",       # Publication-ready plots
+  "cowplot",      # Combine multiple ggplots
+  "gridExtra"     # Arrange plots in grid
+)
 
-# Reporting and Reproducibility
-rmarkdown       # Dynamic reports
-knitr           # Report rendering
+# ----------------------------
+# Reporting & Reproducibility
+# ----------------------------
+reporting_packages <- c(
+  "rmarkdown",
+  "knitr"
+)
 
-# Data Download & API
-httr            # HTTP requests (e.g., for Kaggle API)
-zip             # Unzipping downloaded archives
-jsonlite        # JSON file parsing (e.g., kaggle.json)
+# ----------------------------
+# Data Access & API
+# ----------------------------
+api_packages <- c(
+  "httr",
+  "zip",
+  "jsonlite"
+)
 
-# Heatmap
-pheatmap
+# ----------------------------
+# Heatmaps
+# ----------------------------
+heatmap_packages <- c(
+  "pheatmap"
+)
 
+# ----------------------------
+# Shiny App Requirements
+# ----------------------------
+shiny_packages <- c(
+  "shiny",
+  "readr",
+  "dplyr"
+)
+
+# ----------------------------
+# Install All Packages
+# ----------------------------
+all_packages <- c(
+  core_packages,
+  prep_packages,
+  modeling_packages,
+  evaluation_packages,
+  viz_packages,
+  reporting_packages,
+  api_packages,
+  heatmap_packages,
+  shiny_packages
+)
+
+install_if_missing(all_packages)

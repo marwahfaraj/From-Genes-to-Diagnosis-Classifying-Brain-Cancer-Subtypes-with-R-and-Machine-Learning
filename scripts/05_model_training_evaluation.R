@@ -11,8 +11,9 @@ suppressPackageStartupMessages({
 })
 
 # Ensure output folders exist
-if (!dir.exists("output/final_model")) dir.create("output/final_model", recursive = TRUE)
-if (!dir.exists("output/final_model/plots")) dir.create("output/final_model/plots", recursive = TRUE)
+dir.create("output/final_model/plots", recursive = TRUE, showWarnings = FALSE)
+dir.create("shiny_app/model", recursive = TRUE, showWarnings = FALSE)
+dir.create("shiny_app/data", recursive = TRUE, showWarnings = FALSE)
 
 # Load data
 data <- read.csv("output/dim_reduction/pca_scores.csv")
@@ -20,14 +21,14 @@ class_col <- if ("Class" %in% names(data)) "Class" else "type"
 data[[class_col]] <- as.factor(data[[class_col]])
 original_class_levels <- levels(data[[class_col]])
 
-# Define your custom base colors
+# Custom base colors
 custom_colors <- c("#54B3AE", "#2C3A4B", "#A5D5D1", "#e8ead3", "#7FB6B0")
 base_colors <- setNames(custom_colors, original_class_levels)
 
-# Models to evaluate
+# Models
 models <- c("xgbTree", "rf", "nnet")
 
-# Inner and outer CV
+# CV controls
 outer_ctrl <- trainControl(method = "cv", number = 5, savePredictions = "final",
                            classProbs = TRUE, sampling = "smote",
                            summaryFunction = multiClassSummary)
@@ -35,15 +36,18 @@ outer_ctrl <- trainControl(method = "cv", number = 5, savePredictions = "final",
 inner_ctrl <- trainControl(method = "cv", number = 3, sampling = "smote",
                            classProbs = TRUE, summaryFunction = multiClassSummary)
 
-# Nested evaluation function
+# Nested CV evaluation
 nested_eval <- function(model_name) {
   set.seed(123)
   outer_folds <- createFolds(data[[class_col]], k = 5, returnTrain = TRUE)
   
   outer_results <- map_dfr(seq_along(outer_folds), function(i) {
     train_idx <- outer_folds[[i]]
+    test_idx <- setdiff(seq_len(nrow(data)), train_idx)
     train_data <- data[train_idx, ]
-    test_data <- data[-train_idx, ]
+    test_data <- data[test_idx, ]
+    
+    if (i == 5) write_csv(test_data, "shiny_app/data/test_set.csv")
     
     set.seed(123)
     fit <- train(
@@ -64,9 +68,7 @@ nested_eval <- function(model_name) {
     aucs <- map_dbl(original_class_levels, function(lvl) {
       if (lvl %in% colnames(probs)) {
         roc(as.numeric(test_data[[class_col]] == lvl), probs[[lvl]])$auc
-      } else {
-        NA_real_
-      }
+      } else NA_real_
     })
     
     tibble(
@@ -82,10 +84,10 @@ nested_eval <- function(model_name) {
   outer_results
 }
 
-# Run nested evaluation
+# Run nested CV
 all_results <- map_dfr(models, nested_eval)
 
-# Save overall summary
+# Aggregate summary
 summary_stats <- all_results %>%
   group_by(Model) %>%
   summarize(
@@ -101,7 +103,7 @@ write_csv(summary_stats, "output/final_model/summary_nested_models.csv")
 best_model <- summary_stats %>% arrange(desc(Accuracy)) %>% slice(1) %>% pull(Model)
 cat("Best model:", best_model, "\n")
 
-# Final model on all data
+# Final model training
 set.seed(123)
 final_ctrl <- trainControl(method = "cv", number = 5, classProbs = TRUE,
                            summaryFunction = multiClassSummary,
@@ -116,14 +118,17 @@ final_model <- train(
   preProcess = c("nzv", "center", "scale")
 )
 
-# Save confusion matrix
+# Save final model
+saveRDS(final_model, "shiny_app/model/final_model.rds")
+
+# Confusion matrix
 conf_matrix <- confusionMatrix(final_model$pred$pred, final_model$pred$obs)
 capture.output(conf_matrix, file = "output/final_model/confusion_matrix.txt")
 
-# ----- ROC Plot -----
+# ROC plot
 df_combined <- final_model$pred
 pred_class_levels <- levels(df_combined$obs)
-base_colors <- base_colors[pred_class_levels]  # Reorder to match prediction levels
+base_colors <- base_colors[pred_class_levels]
 
 png("output/final_model/plots/final_model_roc.png", width = 800, height = 600)
 tryCatch({
@@ -158,51 +163,33 @@ tryCatch({
 })
 dev.off()
 
-# ----- Final Corrected Confusion Matrix Plot -----
-library(ggplot2)
-library(scales)
-library(dplyr)
-
-# Prepare the data
+# Confusion matrix heatmap
 conf_df <- as.data.frame(conf_matrix$table)
 colnames(conf_df) <- c("Predicted", "Actual", "Freq")
-
-# Set class order in standard top-left to bottom-right diagonal
 class_order <- c("ependymoma", "glioblastoma", "medulloblastoma", "normal", "pilocytic_astrocytoma")
-conf_df$Actual <- factor(conf_df$Actual, levels = class_order)        # Y-axis (rows)
-conf_df$Predicted <- factor(conf_df$Predicted, levels = class_order)  # X-axis (columns)
+conf_df$Actual <- factor(conf_df$Actual, levels = class_order)
+conf_df$Predicted <- factor(conf_df$Predicted, levels = class_order)
 
-# Calculate percentages
 conf_df <- conf_df %>%
   group_by(Actual) %>%
   mutate(Pct = Freq / sum(Freq))
 
-# Create and save the confusion matrix heatmap
 p <- ggplot(conf_df, aes(x = Predicted, y = Actual, fill = Pct)) +
   geom_tile(color = "white", linewidth = 1) +
   geom_text(aes(label = sprintf("%d\n(%.1f%%)", Freq, Pct * 100)),
             color = "black", size = 5, fontface = "bold") +
-  scale_fill_gradient(low = "white", high = "#54B3AE",
-                      limits = c(0, 1),
-                      labels = percent_format(accuracy = 1)) +
+  scale_fill_gradient(low = "white", high = "#54B3AE", limits = c(0, 1), labels = percent_format(accuracy = 1)) +
   labs(title = paste("Confusion Matrix -", best_model),
-       x = "\nPredicted Class",
-       y = "Actual (Reference) Class\n",
-       fill = "Percentage") +
+       x = "\nPredicted Class", y = "Actual (Reference) Class\n", fill = "Percentage") +
   theme_minimal(base_size = 14) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-    axis.text.y = element_text(hjust = 1),
-    panel.grid = element_blank(),
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
-    legend.position = "right",
-    plot.margin = margin(1, 1, 1, 1, "cm")
-  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        axis.text.y = element_text(hjust = 1),
+        panel.grid = element_blank(),
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+        legend.position = "right",
+        plot.margin = margin(1, 1, 1, 1, "cm")) +
   coord_fixed()
 
-# Save it
-ggsave("output/final_model/plots/final_model_confusion_matrix.png",
-       plot = p, width = 10, height = 8, dpi = 300)
+ggsave("output/final_model/plots/final_model_confusion_matrix.png", plot = p, width = 10, height = 8, dpi = 300)
 
-
-cat("✅ Nested CV complete. Metrics and plots saved in output/final_model/.\n")
+cat("✅ Nested CV complete. Model + metrics + plots saved.\n")
