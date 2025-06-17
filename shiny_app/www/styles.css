@@ -1,58 +1,338 @@
-/* Background setup */
-body {
-  background-image: url("brain tumor model hero.jpg");
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  font-family: "Helvetica Neue", sans-serif;
-  margin: 0;
-  padding: 0;
-  color: #f0f4f8;
+/* Brain Tumor Classification App - Custom Styles */
+
+/* Color Variables */
+:root {
+  --primary-color: #7DD3C0;
+  --secondary-color: #5BC0BE;
+  --accent-color: #4A90A4;
+  --background-color: #F8FFFE;
+  --text-color: #2C3E50;
+  --success-color: #27AE60;
+  --warning-color: #F39C12;
+  --danger-color: #E74C3C;
+  --white: #FFFFFF;
+  --light-gray: #E8F8F5;
 }
 
-/* Headings */
-h1, h2, h3 {
-  color: #ffffff;
-  text-shadow: 1px 1px 4px #000;
+/* Main Layout */
+.content-wrapper, .right-side {
+  background: linear-gradient(135deg, var(--background-color) 0%, var(--light-gray) 100%);
 }
 
-/* Buttons */
-button, .btn, .action-button {
-  background-color: #00aaff;
-  color: white;
+/* Header Styling */
+.main-header .navbar {
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-weight: bold;
-  box-shadow: 0px 2px 6px rgba(0,0,0,0.3);
-  margin-top: 10px;
 }
 
-/* Wrap long tables */
-.table-container {
-  overflow-x: auto;
-  background-color: rgba(0, 0, 0, 0.6);  /* dark background for contrast */
-  padding: 15px;
+.main-header .logo {
+  background: var(--accent-color);
+  color: var(--white);
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.main-header .logo:hover {
+  background: var(--accent-color);
+  color: var(--white);
+}
+
+/* Box Styling */
+.box.box-primary {
+  border-top-color: var(--primary-color);
+  border-top-width: 3px;
+}
+
+.box-header h3 {
+  color: var(--text-color);
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.box {
+  background: var(--white);
   border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   margin-bottom: 20px;
 }
 
-/* Tables */
-table {
-  width: max-content;
-  border-collapse: collapse;
-  color: #fefefe;
+/* Button Styling */
+.btn-primary {
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 16px;
+  transition: all 0.3s ease;
 }
 
-th, td {
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  background-color: rgba(255, 255, 255, 0.1);
+.btn-primary:hover {
+  background: linear-gradient(45deg, var(--secondary-color), var(--accent-color));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
 }
 
-/* Output error */
+.btn-primary:active, .btn-primary:focus {
+  background: linear-gradient(45deg, var(--secondary-color), var(--accent-color));
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transform: translateY(0);
+}
+
+/* Large Button Styling */
+.btn-lg {
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Info Box Styling */
+.info-box {
+  background: var(--white);
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  border: 1px solid rgba(125, 211, 192, 0.2);
+}
+
+.info-box-icon {
+  background: var(--primary-color) !important;
+  color: var(--white) !important;
+}
+
+.info-box-content {
+  padding: 15px;
+}
+
+/* Progress Bar */
+.progress-bar {
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+}
+
+/* Tab Styling */
+.nav-tabs-custom > .nav-tabs > li.active > a {
+  border-top-color: var(--primary-color);
+  border-top-width: 3px;
+  color: var(--text-color);
+  font-weight: bold;
+}
+
+.nav-tabs-custom > .nav-tabs > li > a {
+  color: var(--text-color);
+  border-radius: 4px 4px 0 0;
+}
+
+.nav-tabs-custom > .nav-tabs > li > a:hover {
+  background: var(--light-gray);
+  border-color: var(--primary-color);
+}
+
+/* Custom Components */
+.explanation-box {
+  background: var(--white);
+  border-left: 4px solid var(--primary-color);
+  padding: 20px;
+  margin: 15px 0;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.explanation-box h5 {
+  color: var(--text-color);
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.explanation-box h6 {
+  color: var(--accent-color);
+  font-weight: bold;
+  margin-top: 15px;
+  margin-bottom: 8px;
+}
+
+.explanation-box p {
+  color: var(--text-color);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.explanation-box ul, .explanation-box ol {
+  color: var(--text-color);
+  padding-left: 20px;
+}
+
+.explanation-box li {
+  margin-bottom: 5px;
+  line-height: 1.5;
+}
+
+/* Metric Cards */
+.metric-card {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 25px;
+  margin: 10px 0;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  border-top: 4px solid var(--primary-color);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.metric-card h4 {
+  color: var(--primary-color);
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.metric-card h2 {
+  color: var(--accent-color);
+  font-weight: bold;
+  font-size: 28px;
+  margin: 0;
+}
+
+/* File Input Styling */
+.form-control {
+  border: 2px solid rgba(125, 211, 192, 0.3);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(125, 211, 192, 0.25);
+}
+
+/* DataTable Styling */
+.dataTables_wrapper {
+  background: var(--white);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.dataTables_filter input {
+  border: 1px solid var(--primary-color);
+  border-radius: 4px;
+  padding: 5px 10px;
+}
+
+.dataTables_filter input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 0.2rem rgba(125, 211, 192, 0.25);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: rgba(125, 211, 192, 0.05);
+}
+
+.table-hover > tbody > tr:hover {
+  background-color: rgba(125, 211, 192, 0.1);
+}
+
+/* Sidebar Styling */
+.main-sidebar {
+  background: linear-gradient(180deg, var(--accent-color) 0%, #3a7e96 100%);
+}
+
+.sidebar-menu > li > a {
+  color: var(--white);
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.sidebar-menu > li > a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-left-color: var(--primary-color);
+}
+
+.sidebar-menu > li.active > a {
+  background: rgba(255, 255, 255, 0.15);
+  border-left-color: var(--primary-color);
+  font-weight: bold;
+}
+
+/* Alert Styling */
+.alert-warning {
+  background: rgba(243, 156, 18, 0.1);
+  border-color: var(--warning-color);
+  color: #8a6d3b;
+}
+
+.alert-success {
+  background: rgba(39, 174, 96, 0.1);
+  border-color: var(--success-color);
+  color: #3c763d;
+}
+
+/* Conditional Panel Styling */
 .shiny-output-error {
-  color: #ffaaaa;
-  font-style: italic;
+  color: var(--danger-color);
+  background: rgba(231, 76, 60, 0.1);
+  padding: 10px;
+  border-radius: 4px;
+  border-left: 4px solid var(--danger-color);
+}
+
+/* Loading Spinner */
+.shiny-spinner-output-container {
+  background: rgba(125, 211, 192, 0.1);
+  border-radius: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .metric-card {
+    margin: 5px 0;
+    padding: 15px;
+  }
+  
+  .explanation-box {
+    padding: 15px;
+    margin: 10px 0;
+  }
+  
+  .btn-lg {
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+}
+
+/* Plot Styling */
+.plotly {
+  background: var(--white);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-color);
+}
+
+p {
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+/* Strong text styling */
+strong {
+  color: var(--accent-color);
+  font-weight: bold;
+}
+
+/* Link styling */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-color);
+  text-decoration: underline;
 }

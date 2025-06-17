@@ -2,56 +2,56 @@ Confusion Matrix and Statistics
 
                        Reference
 Prediction              ependymoma glioblastoma medulloblastoma normal
-  ependymoma                    46            0               0      0
-  glioblastoma                   0           34               2      0
+  ependymoma                    44            1               1      0
+  glioblastoma                   0           32               1      1
   medulloblastoma                0            0              20      0
-  normal                         0            0               0     13
-  pilocytic_astrocytoma          0            0               0      0
+  normal                         0            1               0     12
+  pilocytic_astrocytoma          2            0               0      0
                        Reference
 Prediction              pilocytic_astrocytoma
-  ependymoma                                0
+  ependymoma                                1
   glioblastoma                              0
   medulloblastoma                           0
   normal                                    0
-  pilocytic_astrocytoma                    15
+  pilocytic_astrocytoma                    14
 
 Overall Statistics
                                           
-               Accuracy : 0.9846          
-                 95% CI : (0.9455, 0.9981)
+               Accuracy : 0.9385          
+                 95% CI : (0.8823, 0.9731)
     No Information Rate : 0.3538          
     P-Value [Acc > NIR] : < 2.2e-16       
                                           
-                  Kappa : 0.9796          
+                  Kappa : 0.9183          
                                           
  Mcnemar's Test P-Value : NA              
 
 Statistics by Class:
 
                      Class: ependymoma Class: glioblastoma
-Sensitivity                     1.0000              1.0000
-Specificity                     1.0000              0.9792
-Pos Pred Value                  1.0000              0.9444
-Neg Pred Value                  1.0000              1.0000
+Sensitivity                     0.9565              0.9412
+Specificity                     0.9643              0.9792
+Pos Pred Value                  0.9362              0.9412
+Neg Pred Value                  0.9759              0.9792
 Prevalence                      0.3538              0.2615
-Detection Rate                  0.3538              0.2615
-Detection Prevalence            0.3538              0.2769
-Balanced Accuracy               1.0000              0.9896
+Detection Rate                  0.3385              0.2462
+Detection Prevalence            0.3615              0.2615
+Balanced Accuracy               0.9604              0.9602
                      Class: medulloblastoma Class: normal
-Sensitivity                          0.9091           1.0
-Specificity                          1.0000           1.0
-Pos Pred Value                       1.0000           1.0
-Neg Pred Value                       0.9818           1.0
-Prevalence                           0.1692           0.1
-Detection Rate                       0.1538           0.1
-Detection Prevalence                 0.1538           0.1
-Balanced Accuracy                    0.9545           1.0
+Sensitivity                          0.9091       0.92308
+Specificity                          1.0000       0.99145
+Pos Pred Value                       1.0000       0.92308
+Neg Pred Value                       0.9818       0.99145
+Prevalence                           0.1692       0.10000
+Detection Rate                       0.1538       0.09231
+Detection Prevalence                 0.1538       0.10000
+Balanced Accuracy                    0.9545       0.95726
                      Class: pilocytic_astrocytoma
-Sensitivity                                1.0000
-Specificity                                1.0000
-Pos Pred Value                             1.0000
-Neg Pred Value                             1.0000
+Sensitivity                                0.9333
+Specificity                                0.9826
+Pos Pred Value                             0.8750
+Neg Pred Value                             0.9912
 Prevalence                                 0.1154
-Detection Rate                             0.1154
-Detection Prevalence                       0.1154
-Balanced Accuracy                          1.0000
+Detection Rate                             0.1077
+Detection Prevalence                       0.1231
+Balanced Accuracy                          0.9580

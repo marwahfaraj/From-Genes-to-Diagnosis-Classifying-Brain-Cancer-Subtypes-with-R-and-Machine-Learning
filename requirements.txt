@@ -104,7 +104,9 @@ all_packages <- c(
   reporting_packages,
   api_packages,
   heatmap_packages,
-  shiny_packages
+  shiny_packages,
+  RColorBrewer,
+  shinyWidgets
 )
 
 install_if_missing(all_packages)

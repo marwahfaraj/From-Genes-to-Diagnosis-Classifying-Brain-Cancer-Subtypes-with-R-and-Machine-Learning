@@ -19,6 +19,12 @@ dir.create("shiny_app/data", recursive = TRUE, showWarnings = FALSE)
 data <- read.csv("output/dim_reduction/pca_scores.csv")
 class_col <- if ("Class" %in% names(data)) "Class" else "type"
 data[[class_col]] <- as.factor(data[[class_col]])
+
+# REMOVE Sample column if present
+if ("Sample" %in% names(data)) {
+  data <- data[, !(names(data) %in% "Sample")]
+}
+
 original_class_levels <- levels(data[[class_col]])
 
 # Custom base colors
@@ -163,12 +169,15 @@ tryCatch({
 })
 dev.off()
 
-# Confusion matrix heatmap
 conf_df <- as.data.frame(conf_matrix$table)
 colnames(conf_df) <- c("Predicted", "Actual", "Freq")
+
+# Define class order - keep same order for Predicted, reverse for Actual
 class_order <- c("ependymoma", "glioblastoma", "medulloblastoma", "normal", "pilocytic_astrocytoma")
-conf_df$Actual <- factor(conf_df$Actual, levels = class_order)
-conf_df$Predicted <- factor(conf_df$Predicted, levels = class_order)
+class_order_reversed <- rev(class_order)  # Reverse the order for Actual
+
+conf_df$Actual <- factor(conf_df$Actual, levels = class_order_reversed)  # Use reversed order
+conf_df$Predicted <- factor(conf_df$Predicted, levels = class_order)     # Keep original order
 
 conf_df <- conf_df %>%
   group_by(Actual) %>%
@@ -191,5 +200,4 @@ p <- ggplot(conf_df, aes(x = Predicted, y = Actual, fill = Pct)) +
   coord_fixed()
 
 ggsave("output/final_model/plots/final_model_confusion_matrix.png", plot = p, width = 10, height = 8, dpi = 300)
-
 cat("✅ Nested CV complete. Model + metrics + plots saved.\n")
