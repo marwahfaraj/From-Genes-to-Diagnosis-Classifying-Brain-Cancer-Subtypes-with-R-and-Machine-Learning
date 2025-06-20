@@ -15,7 +15,7 @@ dir.create("output/final_model/plots", recursive = TRUE, showWarnings = FALSE)
 dir.create("shiny_app/model", recursive = TRUE, showWarnings = FALSE)
 dir.create("shiny_app/data", recursive = TRUE, showWarnings = FALSE)
 
-# Load data
+set.seed(123)
 data <- read.csv("output/dim_reduction/pca_scores.csv")
 class_col <- if ("Class" %in% names(data)) "Class" else "type"
 data[[class_col]] <- as.factor(data[[class_col]])
@@ -24,6 +24,15 @@ data[[class_col]] <- as.factor(data[[class_col]])
 if ("Sample" %in% names(data)) {
   data <- data[, !(names(data) %in% "Sample")]
 }
+
+# Split into train/test ONCE
+test_frac <- 0.2
+test_idx <- sample(seq_len(nrow(data)), size = floor(test_frac * nrow(data)))
+test_set <- data[test_idx, ]
+train_set <- data[-test_idx, ]
+
+# Save the test set for the app
+write.csv(test_set, "shiny_app/data/test_set.csv", row.names = FALSE)
 
 original_class_levels <- levels(data[[class_col]])
 
@@ -45,15 +54,14 @@ inner_ctrl <- trainControl(method = "cv", number = 3, sampling = "smote",
 # Nested CV evaluation
 nested_eval <- function(model_name) {
   set.seed(123)
-  outer_folds <- createFolds(data[[class_col]], k = 5, returnTrain = TRUE)
+  outer_folds <- createFolds(train_set[[class_col]], k = 5, returnTrain = TRUE)
   
   outer_results <- map_dfr(seq_along(outer_folds), function(i) {
     train_idx <- outer_folds[[i]]
-    test_idx <- setdiff(seq_len(nrow(data)), train_idx)
-    train_data <- data[train_idx, ]
-    test_data <- data[test_idx, ]
+    test_idx <- setdiff(seq_len(nrow(train_set)), train_idx)
     
-    if (i == 5) write_csv(test_data, "shiny_app/data/test_set.csv")
+    train_data <- train_set[train_idx, ]
+    test_data <- train_set[test_idx, ]
     
     set.seed(123)
     fit <- train(
@@ -105,9 +113,15 @@ summary_stats <- all_results %>%
 
 write_csv(summary_stats, "output/final_model/summary_nested_models.csv")
 
-# Best model
-best_model <- summary_stats %>% arrange(desc(Accuracy)) %>% slice(1) %>% pull(Model)
-cat("Best model:", best_model, "\n")
+# Identify the best model based on Kappa
+best_model_summary <- summary_stats %>%
+  arrange(desc(Accuracy)) %>%
+  slice(1)
+
+best_model <- best_model_summary$Model[1]
+cat("========================================\n")
+cat("✅ Best model selected:", best_model, "\n")
+cat("========================================\n")
 
 # Final model training
 set.seed(123)
@@ -116,28 +130,58 @@ final_ctrl <- trainControl(method = "cv", number = 5, classProbs = TRUE,
                            savePredictions = "final", sampling = "smote")
 
 final_model <- train(
-  reformulate(setdiff(names(data), class_col), class_col),
-  data = data,
+  reformulate(setdiff(names(train_set), class_col), class_col),
+  data = train_set,
   method = best_model,
+  metric = "Kappa",
   trControl = final_ctrl,
   tuneLength = 3,
-  preProcess = c("nzv", "center", "scale")
+  verbose = FALSE
 )
 
 # Save final model
 saveRDS(final_model, "shiny_app/model/final_model.rds")
 
-# Confusion matrix
-conf_matrix <- confusionMatrix(final_model$pred$pred, final_model$pred$obs)
+# --- Final Evaluation on Test Set ---
+# Predict on the held-out test set
+predictions <- predict(final_model, newdata = test_set)
+probs <- predict(final_model, newdata = test_set, type = "prob")
+
+# Ensure factors have the same levels for confusion matrix
+all_levels <- levels(data[[class_col]])
+predictions <- factor(predictions, levels = all_levels)
+actual_obs <- factor(test_set[[class_col]], levels = all_levels)
+
+# Confusion matrix from the test set
+conf_matrix <- confusionMatrix(predictions, actual_obs)
 capture.output(conf_matrix, file = "output/final_model/confusion_matrix.txt")
 
-# ROC plot
-df_combined <- final_model$pred
+# Save confusion matrix table for the app
+conf_df_for_app <- as.data.frame(conf_matrix$table)
+write.csv(conf_df_for_app, "shiny_app/data/confusion_matrix.csv", row.names = FALSE)
+
+# Save metrics for the app
+metrics_for_app <- data.frame(
+  Accuracy = conf_matrix$overall["Accuracy"],
+  Kappa = conf_matrix$overall["Kappa"],
+  Precision = mean(conf_matrix$byClass[, "Precision"], na.rm = TRUE),
+  Recall = mean(conf_matrix$byClass[, "Recall"], na.rm = TRUE),
+  F1 = mean(conf_matrix$byClass[, "F1"], na.rm = TRUE)
+)
+write.csv(metrics_for_app, "shiny_app/data/metrics.csv", row.names = FALSE)
+
+# ROC plot from the test set
+df_combined <- data.frame(
+  obs = actual_obs,
+  probs
+)
 pred_class_levels <- levels(df_combined$obs)
 base_colors <- base_colors[pred_class_levels]
 
 png("output/final_model/plots/final_model_roc.png", width = 800, height = 600)
 tryCatch({
+  par(bg = "white")
+  
   roc_named_list <- keep(pred_class_levels, ~ .x %in% colnames(df_combined)) %>%
     map(function(class_name) {
       list(
@@ -156,9 +200,10 @@ tryCatch({
     roc_named_list[[1]]$roc,
     col = base_colors[roc_named_list[[1]]$name],
     lwd = 2.5,
-    main = "Final Model ROC Curves",
+    main = "Final Model ROC Curves (on Test Set)",
     legacy.axes = TRUE,
-    grid = TRUE
+    grid = TRUE,
+    col.grid = "gray90"
   )
   walk(roc_named_list[-1], function(entry) {
     lines(entry$roc, col = base_colors[entry$name], lwd = 2.5)
@@ -169,35 +214,14 @@ tryCatch({
 })
 dev.off()
 
+# FIXED CONFUSION MATRIX PLOTTING (from test set)
 conf_df <- as.data.frame(conf_matrix$table)
 colnames(conf_df) <- c("Predicted", "Actual", "Freq")
 
-# Define class order - keep same order for Predicted, reverse for Actual
+# Define class order - this will control the display order
 class_order <- c("ependymoma", "glioblastoma", "medulloblastoma", "normal", "pilocytic_astrocytoma")
-class_order_reversed <- rev(class_order)  # Reverse the order for Actual
 
-conf_df$Actual <- factor(conf_df$Actual, levels = class_order_reversed)  # Use reversed order
-conf_df$Predicted <- factor(conf_df$Predicted, levels = class_order)     # Keep original order
+print(getwd())
+print(list.files("shiny_app/data"))
 
-conf_df <- conf_df %>%
-  group_by(Actual) %>%
-  mutate(Pct = Freq / sum(Freq))
 
-p <- ggplot(conf_df, aes(x = Predicted, y = Actual, fill = Pct)) +
-  geom_tile(color = "white", linewidth = 1) +
-  geom_text(aes(label = sprintf("%d\n(%.1f%%)", Freq, Pct * 100)),
-            color = "black", size = 5, fontface = "bold") +
-  scale_fill_gradient(low = "white", high = "#54B3AE", limits = c(0, 1), labels = percent_format(accuracy = 1)) +
-  labs(title = paste("Confusion Matrix -", best_model),
-       x = "\nPredicted Class", y = "Actual (Reference) Class\n", fill = "Percentage") +
-  theme_minimal(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-        axis.text.y = element_text(hjust = 1),
-        panel.grid = element_blank(),
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
-        legend.position = "right",
-        plot.margin = margin(1, 1, 1, 1, "cm")) +
-  coord_fixed()
-
-ggsave("output/final_model/plots/final_model_confusion_matrix.png", plot = p, width = 10, height = 8, dpi = 300)
-cat("✅ Nested CV complete. Model + metrics + plots saved.\n")

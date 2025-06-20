@@ -52,9 +52,10 @@ scree_plot <- ggplot(eig_df[1:20, ], aes(x = PC, y = `percentage of variance`)) 
   ) +
   theme_minimal(base_size = 14) +
   theme(
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.minor.y = element_blank()
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.grid.major = element_line(color = "gray90"),
+    panel.grid.minor = element_line(color = "gray95")
   )
 
 ggsave("output/dim_reduction/plots/pca_scree.png", scree_plot, width = 8, height = 6, dpi = 300)
@@ -95,6 +96,12 @@ ggsave(
     geom_point(size = 2, alpha = 0.8) +
     scale_color_manual(values = custom_colors) +
     theme_minimal() +
+    theme(
+      panel.background = element_rect(fill = "white", color = NA),
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.grid.major = element_line(color = "gray90"),
+      panel.grid.minor = element_line(color = "gray95")
+    ) +
     labs(title = "PCA Projection (PC1 vs PC2)", color = "Class"),
   width = 7, height = 5, dpi = 300
 )
@@ -116,6 +123,12 @@ ggsave(
     geom_point(size = 2, alpha = 0.8) +
     scale_color_manual(values = custom_colors) +
     theme_minimal() +
+    theme(
+      panel.background = element_rect(fill = "white", color = NA),
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.grid.major = element_line(color = "gray90"),
+      panel.grid.minor = element_line(color = "gray95")
+    ) +
     labs(title = "t-SNE Projection (2D)", color = "Class"),
   width = 7, height = 5, dpi = 300
 )

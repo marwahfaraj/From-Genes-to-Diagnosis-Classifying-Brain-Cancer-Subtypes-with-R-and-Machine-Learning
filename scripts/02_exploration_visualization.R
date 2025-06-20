@@ -94,16 +94,16 @@ p2 <- ggplot(data, aes_string(x = class_col, fill = class_col)) +
   scale_fill_manual(values = tableau_colors) +
   theme_minimal(base_size = 14) +
   theme(
-    panel.background = element_rect(fill = "gray95", color = NA),
-    plot.background  = element_rect(fill = "gray95", color = NA),
-    panel.grid.major = element_line(color = "gray80"),
-    panel.grid.minor = element_line(color = "gray90"),
-    axis.text.x      = element_text(angle = 35, hjust = 1)
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.grid.major = element_line(color = "gray90"),
+    panel.grid.minor = element_line(color = "gray95"),
+    axis.text.x = element_text(angle = 35, hjust = 1)
   ) +
   labs(
     title = "Class Distribution",
-    x     = "Class",
-    y     = "Count"
+    x = "Class",
+    y = "Count"
   )
 
 ggsave(
@@ -131,16 +131,16 @@ p_sum <- ggplot(summary_df, aes(x = Class, y = TotalExpression, color = Class)) 
   scale_color_manual(values = tableau_colors) +
   theme_minimal(base_size = 14) +
   theme(
-    panel.background = element_rect(fill = "gray95", color = NA),
-    plot.background  = element_rect(fill = "gray95", color = NA),
-    panel.grid.major = element_line(color = "gray80"),
-    panel.grid.minor = element_line(color = "gray90"),
-    axis.text.x      = element_text(angle = 35, hjust = 1)
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.grid.major = element_line(color = "gray90"),
+    panel.grid.minor = element_line(color = "gray95"),
+    axis.text.x = element_text(angle = 35, hjust = 1)
   ) +
   labs(
     title = "Total Expression per Sample by Class",
-    x     = "Class",
-    y     = "Sum of Expression"
+    x = "Class",
+    y = "Sum of Expression"
   )
 
 ggsave(
@@ -170,15 +170,18 @@ p_violin <- ggplot(
   scale_fill_manual(values = tableau_colors) +
   theme_minimal(base_size = 12) +
   theme(
-    panel.background = element_rect(fill = "gray95", color = NA),
-    strip.background = element_rect(fill = "gray90", color = NA),
-    axis.text.x      = element_blank(),
-    axis.ticks.x     = element_blank()
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.grid.major = element_line(color = "gray90"),
+    panel.grid.minor = element_line(color = "gray95"),
+    strip.background = element_rect(fill = "white", color = NA),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
   ) +
   labs(
     title = "Violin Plots of Top 10 Most Variable Genes",
-    x     = NULL,
-    y     = "Expression"
+    x = NULL,
+    y = "Expression"
   )
 
 ggsave(

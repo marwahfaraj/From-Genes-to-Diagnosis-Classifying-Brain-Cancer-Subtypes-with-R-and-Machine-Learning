@@ -5,7 +5,13 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(nnet)
   library(smotefamily)
+  library(doParallel)
+  library(themis)
+  library(recipes)
 })
+
+# Source the custom summary function
+source("scripts/utils.R")
 
 # ------------------------------------------------------------
 # Create output directory
@@ -24,7 +30,7 @@ df[[class_col]] <- as.factor(df[[class_col]])
 # ------------------------------------------------------------
 # Weighted Neural Net
 # ------------------------------------------------------------
-cat("Running weighted neural net on PCA data...\n")
+cat("Running weighted NN on PCA data...\n")
 
 weights_vec <- max(table(df[[class_col]])) / table(df[[class_col]])
 sample_weights <- weights_vec[df[[class_col]]]
@@ -34,64 +40,63 @@ ctrl_wt <- trainControl(
   number = 5,
   repeats = 3,
   classProbs = TRUE,
-  summaryFunction = defaultSummary
+  summaryFunction = custom_summary,
+  allowParallel = TRUE
 )
 
+x_train <- df[, -which(names(df) == class_col)]
+y_train <- df[[class_col]]
+
 fit_wt <- train(
-  form = as.formula(paste(class_col, "~ .")),
-  data = df,
+  x = x_train,
+  y = y_train,
   method = "nnet",
   trControl = ctrl_wt,
   tuneLength = 3,
-  preProcess = c("nzv", "center", "scale"),
   weights = sample_weights,
-  trace = FALSE
+  metric = "Kappa",
+  verbose = FALSE
 )
-
-acc_wt <- mean(fit_wt$resample$Accuracy)
-sd_wt  <- sd(fit_wt$resample$Accuracy)
 
 # ------------------------------------------------------------
 # SMOTE Neural Net
 # ------------------------------------------------------------
-cat("Running SMOTE neural net on PCA data...\n")
+cat("Running SMOTE NN on PCA data...\n")
 
 ctrl_sm <- trainControl(
   method = "repeatedcv",
   number = 5,
   repeats = 3,
-  sampling = "smote",
   classProbs = TRUE,
-  summaryFunction = defaultSummary
+  summaryFunction = custom_summary,
+  sampling = "smote",
+  allowParallel = TRUE
 )
 
 fit_sm <- train(
-  form = as.formula(paste(class_col, "~ .")),
-  data = df,
+  x = x_train,
+  y = y_train,
   method = "nnet",
   trControl = ctrl_sm,
   tuneLength = 3,
-  preProcess = c("nzv", "center", "scale"),
-  trace = FALSE
+  metric = "Kappa",
+  verbose = FALSE
 )
-
-acc_sm <- mean(fit_sm$resample$Accuracy)
-sd_sm  <- sd(fit_sm$resample$Accuracy)
 
 # ------------------------------------------------------------
-# Save metrics
+# Collect and summarize results
 # ------------------------------------------------------------
-summary_df <- tibble(
-  Method   = "pca",
-  Strategy = c("Weighted", "SMOTE"),
-  MeanAcc  = c(acc_wt, acc_sm),
-  SDAcc    = c(sd_wt, sd_sm)
+# Get the full row of results for the best tune of each model, selected by Kappa
+results_wt <- fit_wt$results[which.max(fit_wt$results$Kappa.Kappa), ]
+results_sm <- fit_sm$results[which.max(fit_sm$results$Kappa.Kappa), ]
+
+# Combine the results and add a 'Strategy' column
+summary_df <- bind_rows(
+  mutate(results_wt, Strategy = "Weighted"),
+  mutate(results_sm, Strategy = "SMOTE")
 )
 
-write.csv(
-  summary_df,
-  file = "output/model/metrics/summary_nn_pca.csv",
-  row.names = FALSE
-)
+# Save the summary
+write.csv(summary_df, "output/model/metrics/summary_nn_pca.csv", row.names = FALSE)
 
-cat("Saved NN performance metrics with PCA using Weighted + SMOTE.\n")
+cat("Saved Neural Network performance metrics with PCA using Weighted + SMOTE.\n")

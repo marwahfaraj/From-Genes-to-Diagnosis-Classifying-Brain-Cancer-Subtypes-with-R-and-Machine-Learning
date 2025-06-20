@@ -1,10 +1,15 @@
 # 04_eval_rf.R
 
 suppressPackageStartupMessages({
-  library(themis)
   library(caret)
   library(dplyr)
+  library(doParallel)
+  library(themis)
+  library(recipes)
 })
+
+# Source the custom summary function
+source("scripts/utils.R")
 
 # ------------------------------------------------------------
 # Create output directory
@@ -33,20 +38,22 @@ ctrl_wt <- trainControl(
   number = 5,
   repeats = 3,
   classProbs = TRUE,
-  summaryFunction = defaultSummary
+  summaryFunction = custom_summary,
+  allowParallel = TRUE
 )
 
+x_train <- df[, -which(names(df) == class_col)]
+y_train <- df[[class_col]]
+
 fit_wt <- train(
-  form = as.formula(paste(class_col, "~ .")),
-  data = df,
+  x = x_train,
+  y = y_train,
   method = "rf",
   trControl = ctrl_wt,
   tuneLength = 3,
-  weights = sample_weights
+  weights = sample_weights,
+  metric = "Kappa"
 )
-
-acc_wt <- mean(fit_wt$resample$Accuracy)
-sd_wt  <- sd(fit_wt$resample$Accuracy)
 
 # ------------------------------------------------------------
 # 2. SMOTE RF
@@ -57,36 +64,35 @@ ctrl_sm <- trainControl(
   method = "repeatedcv",
   number = 5,
   repeats = 3,
-  sampling = "smote",
   classProbs = TRUE,
-  summaryFunction = defaultSummary
+  summaryFunction = custom_summary,
+  sampling = "smote",
+  allowParallel = TRUE
 )
 
 fit_sm <- train(
-  form = as.formula(paste(class_col, "~ .")),
-  data = df,
+  x = x_train,
+  y = y_train,
   method = "rf",
   trControl = ctrl_sm,
-  tuneLength = 3
+  tuneLength = 3,
+  metric = "Kappa"
 )
-
-acc_sm <- mean(fit_sm$resample$Accuracy)
-sd_sm  <- sd(fit_sm$resample$Accuracy)
 
 # ------------------------------------------------------------
 # Save metrics
 # ------------------------------------------------------------
-summary_df <- tibble(
-  Method   = "pca",
-  Strategy = c("Weighted", "SMOTE"),
-  MeanAcc  = c(acc_wt, acc_sm),
-  SDAcc    = c(sd_wt, sd_sm)
+# Get the full row of results for the best tune of each model, selected by Kappa
+results_wt <- fit_wt$results[which.max(fit_wt$results$Kappa.Kappa), ]
+results_sm <- fit_sm$results[which.max(fit_sm$results$Kappa.Kappa), ]
+
+# Combine the results and add a 'Strategy' column
+summary_df <- bind_rows(
+  mutate(results_wt, Strategy = "Weighted"),
+  mutate(results_sm, Strategy = "SMOTE")
 )
 
-write.csv(
-  summary_df,
-  file = "output/model/metrics/summary_rf_pca.csv",
-  row.names = FALSE
-)
+# Save the summary
+write.csv(summary_df, "output/model/metrics/summary_rf_pca.csv", row.names = FALSE)
 
-cat("Saved RF performance metrics with PCA using Weighted + SMOTE.\n")
+cat("Saved Random Forest performance metrics with PCA using Weighted + SMOTE.\n")
