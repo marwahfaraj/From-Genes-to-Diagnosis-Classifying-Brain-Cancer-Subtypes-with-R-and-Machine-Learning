@@ -49,5 +49,10 @@ po/*~
 rsconnect/
 # Aviod large size file
 data/*
+<<<<<<< HEAD
+=======
+output/cleaned_data.csv
+>>>>>>> 7fd019289aaad55398b6a9a6de058508b27f9d57
 
+.DS_Store.DS_Store
 .DS_Store

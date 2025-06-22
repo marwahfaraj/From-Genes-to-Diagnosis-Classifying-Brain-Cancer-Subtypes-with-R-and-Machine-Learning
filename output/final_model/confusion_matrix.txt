@@ -1,0 +1,57 @@
+Confusion Matrix and Statistics
+
+                       Reference
+Prediction              ependymoma glioblastoma medulloblastoma normal
+  ependymoma                     7            1               0      0
+  glioblastoma                   1            3               1      0
+  medulloblastoma                0            0               6      0
+  normal                         0            0               0      2
+  pilocytic_astrocytoma          0            0               0      0
+                       Reference
+Prediction              pilocytic_astrocytoma
+  ependymoma                                0
+  glioblastoma                              1
+  medulloblastoma                           0
+  normal                                    0
+  pilocytic_astrocytoma                     4
+
+Overall Statistics
+                                          
+               Accuracy : 0.8462          
+                 95% CI : (0.6513, 0.9564)
+    No Information Rate : 0.3077          
+    P-Value [Acc > NIR] : 2.035e-08       
+                                          
+                  Kappa : 0.8008          
+                                          
+ Mcnemar's Test P-Value : NA              
+
+Statistics by Class:
+
+                     Class: ependymoma Class: glioblastoma
+Sensitivity                     0.8750              0.7500
+Specificity                     0.9444              0.8636
+Pos Pred Value                  0.8750              0.5000
+Neg Pred Value                  0.9444              0.9500
+Prevalence                      0.3077              0.1538
+Detection Rate                  0.2692              0.1154
+Detection Prevalence            0.3077              0.2308
+Balanced Accuracy               0.9097              0.8068
+                     Class: medulloblastoma Class: normal
+Sensitivity                          0.8571       1.00000
+Specificity                          1.0000       1.00000
+Pos Pred Value                       1.0000       1.00000
+Neg Pred Value                       0.9500       1.00000
+Prevalence                           0.2692       0.07692
+Detection Rate                       0.2308       0.07692
+Detection Prevalence                 0.2308       0.07692
+Balanced Accuracy                    0.9286       1.00000
+                     Class: pilocytic_astrocytoma
+Sensitivity                                0.8000
+Specificity                                1.0000
+Pos Pred Value                             1.0000
+Neg Pred Value                             0.9545
+Prevalence                                 0.1923
+Detection Rate                             0.1538
+Detection Prevalence                       0.1538
+Balanced Accuracy                          0.9000

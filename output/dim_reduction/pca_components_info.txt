@@ -1,0 +1,2 @@
+PCA Components Chosen: 20 
+Cumulative Variance: 69.5 %
